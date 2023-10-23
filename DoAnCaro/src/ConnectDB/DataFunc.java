@@ -79,7 +79,7 @@ public class DataFunc {
          
                    
             Statement statement;           
-            String str = "INSERT INTO Users(username,password)values('"+ username+"','"+password+"')" ;
+            String str = "INSERT INTO Users(username, password, blocked) VALUES ('" + username + "', '" + password + "', 0)";
                         
             if (con != null) {
                 try {
@@ -244,20 +244,25 @@ public class DataFunc {
         return false;
     
     }
-        public boolean updateUserBlockedStatus(int userId, boolean blockedStatus) {
+public boolean updateUserBlockedStatus(int userId, boolean blockedStatus) {
     PreparedStatement ps = null;
-
     try {
         String sql = "UPDATE Users SET blocked = ? WHERE Id = ?";
         ps = con.prepareStatement(sql);
-        ps.setBoolean(1, blockedStatus); // blockedStatus là giá trị boolean mới (true hoặc false)
+        ps.setBoolean(1, blockedStatus); 
         ps.setInt(2, userId);
-
         int rowsAffected = ps.executeUpdate();
         
-        return rowsAffected > 0; // Trả về true nếu có ít nhất một hàng bị ảnh hưởng (đã cập nhật)
+        if (rowsAffected > 0) {
+            Logger.getLogger(DataFunc.class.getName()).log(Level.INFO, "Successfully updated user with ID: " + userId);
+            return true;
+        } else {
+            Logger.getLogger(DataFunc.class.getName()).log(Level.WARNING, "No rows affected for user with ID: " + userId);
+            return false;
+        }
     } catch (SQLException ex) {
-        Logger.getLogger(DataFunc.class.getName()).log(Level.SEVERE, null, ex);
+        Logger.getLogger(DataFunc.class.getName()).log(Level.SEVERE, "Error updating user with ID: " + userId, ex);
+        return false;
     } finally {
         try {
             if (ps != null) ps.close();
@@ -265,8 +270,7 @@ public class DataFunc {
             Logger.getLogger(DataFunc.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    return false; // Trả về false nếu có lỗi xảy ra hoặc không có hàng nào bị ảnh hưởng (không cập nhật)
 }
+
     
 }

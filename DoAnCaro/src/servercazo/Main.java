@@ -4,6 +4,7 @@
  */
 package servercazo;
 
+import ConnectDB.Connections;
 import caro.common.Room;
 import caro.common.Users;
 import ConnectDB.DataFunc;
@@ -17,6 +18,11 @@ import java.util.logging.Logger;
 import javax.net.ServerSocketFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 /**
  *
@@ -25,16 +31,17 @@ import javax.swing.JOptionPane;
 public class Main extends javax.swing.JFrame {
 
     static public ArrayList<ClientHandler> lstClient;
-    
+
     static public ArrayList<Room> lstRoom;
 
     static java.util.List<Users> uslist = new ArrayList<Users>();
-    
+
     static DataFunc df = new DataFunc();
     /**
      * Creates new form Main
      */
-     Users us;
+    Users us;
+
     public Main() {
         initComponents();
         setLocationRelativeTo(null);
@@ -51,8 +58,10 @@ public class Main extends javax.swing.JFrame {
 
         bt_refresh = new javax.swing.JButton();
         bt_del = new javax.swing.JButton();
+        btnUpdate = new javax.swing.JButton();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        list = new java.awt.List();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
         jPanel2 = new javax.swing.JPanel();
         bt_add1 = new javax.swing.JButton();
         tx_password = new javax.swing.JPasswordField();
@@ -61,7 +70,6 @@ public class Main extends javax.swing.JFrame {
         tx_username = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        btnUpdate = new javax.swing.JButton();
         btnBlock = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -85,14 +93,41 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
-        list.addActionListener(new java.awt.event.ActionListener() {
+        btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                listActionPerformed(evt);
+                btnUpdateActionPerformed(evt);
             }
         });
-        jTabbedPane1.addTab("Danh sách người dùng", list);
 
-        bt_add1.setText("Xong");
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "ID", "Username", "Win", "Lose", "Score", "Blocked"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(jTable1);
+
+        jTabbedPane1.addTab("Danh Sách User", jScrollPane1);
+
+        bt_add1.setText("Thêm");
         bt_add1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 bt_add1ActionPerformed(evt);
@@ -153,13 +188,6 @@ public class Main extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Thêm tài khoản", jPanel2);
 
-        btnUpdate.setText("Update");
-        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUpdateActionPerformed(evt);
-            }
-        });
-
         btnBlock.setText("Block");
         btnBlock.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -198,72 +226,150 @@ public class Main extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+    public void loadDataToJTable(JTable jTable) {
+        DefaultTableModel model = (DefaultTableModel) jTable.getModel();
+        model.setRowCount(0); // Xóa dữ liệu hiện có trong bảng
+
+        Connection connection = Connections.Newconnect();
+
+        if (connection != null) {
+            try {
+                // Thực hiện truy vấn cơ sở dữ liệu
+                String query = "SELECT id, username, win, lose, score, blocked FROM Users";
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(query);
+
+                while (resultSet.next()) {
+                    int id = resultSet.getInt("id");
+                    String username = resultSet.getString("username");
+                    int win = resultSet.getInt("win");
+                    int lose = resultSet.getInt("lose");
+                    int score = resultSet.getInt("score");
+                    boolean blocked = resultSet.getBoolean("blocked");
+
+                    // Chuyển dữ liệu từ cơ sở dữ liệu thành một hàng trong bảng
+                    Object[] rowData = {id, username, win, lose, score, blocked};
+
+                    // Thêm hàng vào mô hình bảng
+                    model.addRow(rowData);
+                }
+
+                // Đóng tài nguyên
+                resultSet.close();
+                statement.close();
+                connection.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Connection is null. Check your database connection.");
+        }
+
+        jTable.setModel(model); // Đặt mô hình cho JTable
+    }
 
     private void bt_refreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bt_refreshActionPerformed
-        // TODO add your handling code here:
-
-        uslist = df.getUserList();
-        list.removeAll();
-
-        for (Users users : uslist) {
-            list.add("Id: " + users.getId()
-                + " | Username: " + users.getUsername()
-                + " | Password: " + users.getPassword()
-                + " | Win: " + users.getWin()
-                + " | Lose: " + users.getLose()
-                + " | Score: " + users.getScore()
-                + " | Blocked: " + users.getBlocked());  // Added blocked field
-        }
+        loadDataToJTable(jTable1);
     }//GEN-LAST:event_bt_refreshActionPerformed
 
     private void bt_delActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bt_delActionPerformed
-        // TODO add your handling code here:
-        int indx = list.getSelectedIndex();
-        if(indx == -1)
-        {
-            JOptionPane.showMessageDialog(null, "Xin hãy chọn người dùng!", "Lỗi", 1);
+        int selectedRow = jTable1.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Xin hãy chọn người dùng trước khi xóa!", "Lỗi", 1);
             return;
         }
-        Users us;
-        us = uslist.get(indx);
-        try {
-            df.DeleteUser(us.getId());
-            JOptionPane.showMessageDialog(null, "Người dùng có mã='"+ us.getId()+"' đã xóa khỏi danh sách!", "hoàn tất", 1);
-            bt_refreshActionPerformed(evt);
-        } catch (SQLException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
 
+        int userId = (int) jTable1.getValueAt(selectedRow, 0); // Lấy ID từ cột đầu tiên (0)
+
+        // Hiển thị hộp thoại xác nhận
+        int confirmResult = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa người dùng này?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+
+        if (confirmResult == JOptionPane.YES_OPTION) {
+            try {
+                df.DeleteUser(userId);
+                JOptionPane.showMessageDialog(null, "Người dùng có mã='" + userId + "' đã bị xóa khỏi danh sách!", "Hoàn tất", 1);
+                loadDataToJTable(jTable1); // Cập nhật lại dữ liệu trên JTable sau khi xóa
+            } catch (SQLException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }//GEN-LAST:event_bt_delActionPerformed
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         // TODO add your handling code here:
-        uslist = df.getUserList();
-        for (Users users : uslist) {
-            list.add("Id: " + users.getId() 
-                    +" | Username: " + users.getUsername() 
-                    + " | Password: " + users.getPassword() 
-                    +" | Win:" +users.getWin()
-                    +" | Lose:" +users.getLose()
-                    +" | Score:" +users.getScore()
-                    +" | Blocked:" +users.getBlocked());  // Added blocked field
-        }                
+        loadDataToJTable(jTable1);
+
     }//GEN-LAST:event_formWindowOpened
-   
+
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
-        // TODO add your handling code here:
-        int indx = list.getSelectedIndex();
-        if(indx == -1)
-        {
-            JOptionPane.showMessageDialog(null, "Chưa chọn người dùng!", "Thông báo", 1);
+        int selectedRow = jTable1.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Vui lòng chọn một người dùng để cập nhật!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        Users us;
-        us = uslist.get(indx);
 
-        UpdateUser up = new UpdateUser(us,df);
-        up.setVisible(true);
+        int userId = (int) jTable1.getValueAt(selectedRow, 0);
+        String username = (String) jTable1.getValueAt(selectedRow, 1);
+        int win = (int) jTable1.getValueAt(selectedRow, 2);
+        int lose = (int) jTable1.getValueAt(selectedRow, 3);
+        int score = (int) jTable1.getValueAt(selectedRow, 4);
+        boolean blocked = (boolean) jTable1.getValueAt(selectedRow, 5);
+
+        Users userToUpdate = new Users();
+        userToUpdate.setId(userId);
+        userToUpdate.setUsername(username);
+        userToUpdate.setWin(win);
+        userToUpdate.setLose(lose);
+        userToUpdate.setScore(score);
+        userToUpdate.setBlocked(blocked);
+        // Khởi tạo đối tượng DataFunc
+        DataFunc dataFuncInstance = new DataFunc();
+
+        // Khởi tạo đối tượng UpdateUser và truyền vào đối tượng Users và DataFunc
+        UpdateUser updateUserForm = new UpdateUser(userToUpdate, dataFuncInstance);
+
+        updateUserForm.setVisible(true);
+        updateUserForm.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+                // Refresh JTable when UpdateUser form is closed
+                loadDataToJTable(jTable1);
+            }
+        });
     }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void btnBlockActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBlockActionPerformed
+        int selectedRow = jTable1.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Chưa chọn người dùng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int userId = (int) jTable1.getValueAt(selectedRow, 0);
+        boolean currentBlockedStatus = (boolean) jTable1.getValueAt(selectedRow, 5); // Lấy trạng thái 'Blocked' từ cột thứ 6 (index 5)
+
+        String confirmationMessage = currentBlockedStatus
+                ? "Bạn có muốn unblock user này không?"
+                : "Bạn có muốn block user này không?";
+
+        int confirmationResult = JOptionPane.showConfirmDialog(null, confirmationMessage, "Xác nhận", JOptionPane.YES_NO_OPTION);
+
+        if (confirmationResult == JOptionPane.YES_OPTION) {
+            boolean newBlockedStatus = !currentBlockedStatus;
+            boolean updatedSuccessfully = df.updateUserBlockedStatus(userId, newBlockedStatus);
+
+            if (updatedSuccessfully) {
+                String statusMessage = newBlockedStatus ? "User đã bị chặn!" : "User đã được mở khóa!";
+                JOptionPane.showMessageDialog(null, statusMessage, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                loadDataToJTable(jTable1); // Gọi hàm này để làm mới dữ liệu trên JTable
+            } else {
+                JOptionPane.showMessageDialog(null, "Lỗi khi cập nhật trạng thái. Vui lòng kiểm tra cơ sở dữ liệu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_btnBlockActionPerformed
 
     private void bt_add1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bt_add1ActionPerformed
         // TODO add your handling code here:
@@ -273,54 +379,17 @@ public class Main extends javax.swing.JFrame {
         username = tx_username.getText();
         password = String.valueOf(tx_password.getPassword());
 
-        if(username.compareTo("")==0 || password.compareTo("") == 0)
-        {
+        if (username.compareTo("") == 0 || password.compareTo("") == 0) {
             JOptionPane.showMessageDialog(null, "Không được để trống.", "thông báo", 1);
             return;
         }
 
-        if(df.checkAva(df.getId(username))== false)
-        {
+        if (df.checkAva(df.getId(username)) == false) {
             df.register(username, password);
             JOptionPane.showMessageDialog(null, "Thêm mới người đùng thành công!", "Hoàn tất", 1);
-            this.setVisible(false);
         }
+        loadDataToJTable(jTable1);
     }//GEN-LAST:event_bt_add1ActionPerformed
-
-    private void listActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_listActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_listActionPerformed
-
-    private void btnBlockActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBlockActionPerformed
-        // Block hoặc Unblock người dùng đã chọn
-
-        int indx = list.getSelectedIndex();
-        if (indx == -1) {
-            JOptionPane.showMessageDialog(null, "Chưa chọn người dùng!", "Thông báo", 1);
-            return;
-        }
-        Users selectedUser = uslist.get(indx);
-
-        // Toggle the blocked status
-        boolean newBlockedStatus = !selectedUser.getBlocked();
-
-        // Cập nhật trạng thái Blocked trong cơ sở dữ liệu và kiểm tra xem cập nhật có thành công không
-        boolean updatedSuccessfully = df.updateUserBlockedStatus(selectedUser.getId(), newBlockedStatus);
-
-        if (updatedSuccessfully) {
-            // Nếu cập nhật thành công, cập nhật trạng thái trong danh sách người dùng
-            selectedUser.setBlocked(newBlockedStatus);
-
-            // Hiển thị thông báo về trạng thái đã cập nhật
-            String statusMessage = newBlockedStatus ? "User đã bị chặn!" : "User đã được mở khóa!";
-            JOptionPane.showMessageDialog(null, statusMessage, "Thông báo", 1);
-
-            // Cập nhật lại danh sách người dùng
-            bt_refreshActionPerformed(evt);
-        } else {
-            JOptionPane.showMessageDialog(null, "Lỗi khi cập nhật trạng thái!", "Lỗi", 1);
-        }
-    }//GEN-LAST:event_btnBlockActionPerformed
 
     /**
      * @param args the command line arguments
@@ -362,13 +431,12 @@ public class Main extends javax.swing.JFrame {
                 }
                 lstClient = new ArrayList<ClientHandler>();
                 lstRoom = new ArrayList<Room>();
-                for (int i=0; i<10; i++)
-                {
+                for (int i = 0; i < 10; i++) {
                     Room temp = new Room(i);
                     lstRoom.add(temp);
-                    
+
                 }
-                
+
                 new Main().setVisible(true);
             }
         });
@@ -397,9 +465,8 @@ public class Main extends javax.swing.JFrame {
             }
         }
     }
-    
-   
-    
+
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bt_add1;
     private javax.swing.JButton bt_del;
@@ -411,8 +478,9 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private java.awt.List list;
+    private javax.swing.JTable jTable1;
     private javax.swing.JPasswordField tx_password;
     private javax.swing.JTextField tx_username;
     // End of variables declaration//GEN-END:variables

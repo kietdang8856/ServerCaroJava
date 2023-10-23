@@ -24,9 +24,18 @@ public class UpdateUser extends javax.swing.JFrame {
      */
     Users us;
     DataFunc df;
+
     public UpdateUser(Users us, DataFunc df) {
         this.us = us;
         this.df = df;
+        initComponents();
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    }
+
+    public UpdateUser(Users us) {
+        this.us = us;
+        this.df = new DataFunc();  // Khởi tạo DataFunc
         initComponents();
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -166,33 +175,40 @@ public class UpdateUser extends javax.swing.JFrame {
         tx_win.setText(String.valueOf(us.getWin()));
         tx_lose.setText(String.valueOf(us.getLose()));
         tx_score.setText(String.valueOf(us.getScore()));
-        
+
     }//GEN-LAST:event_formWindowOpened
 
     private void bt_updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bt_updateActionPerformed
         // TODO add your handling code here:
-       
-        if(tx_username.getText().equalsIgnoreCase("")
-                || tx_password.getText().equalsIgnoreCase("")
-                || tx_win.getText().equalsIgnoreCase("")
-                || tx_lose.getText().equalsIgnoreCase("")
-                || tx_score.getText().equalsIgnoreCase(""))
-        {
-            JOptionPane.showMessageDialog(null, "Some fields are empty", "Error", 1);
+
+        // Trim dấu cách và kiểm tra rỗng
+        if (tx_username.getText().trim().isEmpty()
+                || tx_password.getText().trim().isEmpty()
+                || tx_win.getText().trim().isEmpty()
+                || tx_lose.getText().trim().isEmpty()
+                || tx_score.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Some fields are empty", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        us.setUsername(tx_username.getText());
-        us.setPassword(tx_password.getText());
-        us.setWin(Integer.parseInt(tx_win.getText()));
-        us.setLose(Integer.parseInt(tx_lose.getText()));
-        us.setScore(Integer.parseInt(tx_score.getText()));
+
+        // Cập nhật đối tượng Users
+        us.setUsername(tx_username.getText().trim());
+        us.setPassword(tx_password.getText().trim());
+        us.setWin(Integer.parseInt(tx_win.getText().trim()));
+        us.setLose(Integer.parseInt(tx_lose.getText().trim()));
+        us.setScore(Integer.parseInt(tx_score.getText().trim()));
+
+        // Cập nhật cơ sở dữ liệu
         try {
-            df.updateUser(us);
-            JOptionPane.showMessageDialog(null, "Update Complete!", "Success", 1);
-            this.setVisible(false);
+            if (df.updateUser(us)) {
+                JOptionPane.showMessageDialog(null, "Update Complete!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                this.setVisible(false); // Đóng cửa sổ khi cập nhật thành công
+            } else {
+                JOptionPane.showMessageDialog(null, "Update Failed!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(UpdateUser.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null, "Update Failed due to SQL Exception!", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bt_updateActionPerformed
 
