@@ -70,6 +70,10 @@ public class Main extends javax.swing.JFrame {
         tx_username = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTextPane1 = new javax.swing.JTextPane();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextPane2 = new javax.swing.JTextPane();
         btnBlock = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -187,6 +191,16 @@ public class Main extends javax.swing.JFrame {
         );
 
         jTabbedPane1.addTab("Thêm tài khoản", jPanel2);
+
+        jTextPane1.setEditable(false);
+        jScrollPane2.setViewportView(jTextPane1);
+
+        jTabbedPane1.addTab("Người Chơi Đang Online", jScrollPane2);
+
+        jTextPane2.setEditable(false);
+        jScrollPane3.setViewportView(jTextPane2);
+
+        jTabbedPane1.addTab("Log Trận Đấu", jScrollPane3);
 
         btnBlock.setText("Block");
         btnBlock.addActionListener(new java.awt.event.ActionListener() {
@@ -479,8 +493,12 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTable1;
+    private javax.swing.JTextPane jTextPane1;
+    private javax.swing.JTextPane jTextPane2;
     private javax.swing.JPasswordField tx_password;
     private javax.swing.JTextField tx_username;
     // End of variables declaration//GEN-END:variables

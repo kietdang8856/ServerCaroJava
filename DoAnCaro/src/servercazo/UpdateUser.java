@@ -201,10 +201,10 @@ public class UpdateUser extends javax.swing.JFrame {
         // Cập nhật cơ sở dữ liệu
         try {
             if (df.updateUser(us)) {
-                JOptionPane.showMessageDialog(null, "Update Complete!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Update Thành Công!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 this.setVisible(false); // Đóng cửa sổ khi cập nhật thành công
             } else {
-                JOptionPane.showMessageDialog(null, "Update Failed!", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Update Thất Bại!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
             Logger.getLogger(UpdateUser.class.getName()).log(Level.SEVERE, null, ex);
